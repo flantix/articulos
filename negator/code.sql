@@ -2,6 +2,13 @@
 drop schema public cascade;
 create schema public;
 
+
+CREATE OPERATOR public.! (
+    RIGHTARG = bool,
+    FUNCTION = public.negator, -- el operador utiliza la función de nagación
+    NEGATOR = !<>
+);
+
 create table test (
 	id serial not null,
 	name varchar(255) not null,
@@ -18,7 +25,6 @@ insert into test(name, status)
 		else false end
 	)
 	from generate_series(1, 1000) as g;
-
 
 update test as t set status = !t.status from (
  	select * from test
