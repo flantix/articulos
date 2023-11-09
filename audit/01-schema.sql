@@ -74,7 +74,7 @@ BEGIN
 		insert into audit(operation, ipclient, userdb, tbname, old_rc, old_txt, created_at)
 			select
 				 TG_OP
-				,inet_server_addr()::TEXT
+				,inet_client_addr()::TEXT
 				,current_user
 				,_tb
 				,row_to_json(OLD)
@@ -87,7 +87,7 @@ BEGIN
 		insert into audit(operation, ipclient, userdb, tbname, new_rc, new_txt, created_at)
 			select
 				 TG_OP
-				,inet_server_addr()::TEXT
+				,inet_client_addr()::TEXT
 				,current_user
 				,_tb
 				,row_to_json(NEW)
@@ -101,7 +101,7 @@ BEGIN
 		insert into audit(operation, ipclient, userdb, tbname, new_rc, new_txt, old_rc, old_txt, created_at)
 			select
 				TG_OP
-				,inet_server_addr()::TEXT
+				,inet_client_addr()::TEXT
 				,current_user
 				,_tb
 				,row_to_json(NEW)
