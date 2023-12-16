@@ -1,3 +1,7 @@
+create schema app;
+create extension if not exists pgcrypto schema app;
+set search_path to app;
+
 ------------------------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION app.url_encode(data bytea) RETURNS text LANGUAGE sql AS $$
 	SELECT translate(encode(data, 'base64'), E'+/=\n', '-_');
