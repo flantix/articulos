@@ -44,34 +44,34 @@ $$ language plpgsql;
 create or replace function app.jwt_verify(token text, secrect text)
 RETURNS TABLE(header json, payload json, valid boolean) as
 $$
-	with cto as(
+	with cte as(
 		select regexp_split_to_array(token, '\.') as r
 	),
-	cto2 as(
+	cte2 as(
 		select app.url_encode(app.hmac(format('%s.%s', r[1] , r[2]), secrect, 'sha256')) = r[3]
-		as valid from cto
+		as valid from cte
 	)
 	select
 		convert_from(app.url_decode(r[1]), 'utf8')::json AS header,
 		convert_from(app.url_decode(r[2]), 'utf8')::json AS payload,
-		cto2.valid
-	from cto, cto2;
+		cte2.valid
+	from cte, cte;
 $$  LANGUAGE sql;
 
 
 /*
 ------------------------------------------------------------------------------------------------------
 -- test ok
-with cto as (
+with cte as (
 	select token from app.jwt_sign('{"test" : 1 }', '123456')
 )
-select (app.jwt_verify(cto.token, '123456')).*  from cto;
+select (app.jwt_verify(cte.token, '123456')).*  from cte;
 
 -- test fail:
-with cto as (
+with cte as (
 	select token from app.jwt_sign('{"test" : 1 }', '123456')
 )
-select (app.jwt_verify(cto.token, '654321')).*  from cto;
+select (app.jwt_verify(cte.token, '654321')).*  from cte;
 */
 
 
