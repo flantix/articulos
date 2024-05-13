@@ -41,6 +41,7 @@ tunnel_is_active()
 
 start_tunnel()
 {
+	init
 	echo "[+] init cloudflared tunnel for '${SERVICE}'"
 	if [ ! -f $CLOUDFLARED_BIN ]; then
 
@@ -109,7 +110,6 @@ stop_tunnel()
 case "$1" in
 
 	"start")
-		init
 		start_tunnel
 	;;
 
