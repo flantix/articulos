@@ -1,0 +1,130 @@
+#!/bin/bash
+
+# @todo add user:group
+
+SERVICE=${SERVICE:-'default'}
+CLOUDFLARED_TOKEN=${CLOUDFLARED_TOKEN:-''}
+
+LOGDIR="/var/log/cloudflared/${SERVICE}/"
+CLOUDFLARED_TUNNEL_PIDFILE="/var/run/cloudflared/tunnel-${SERVICE}.pid"
+CLOUDFLARED_DOWNLOAD='https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64'
+CLOUDFLARED_BIN='/usr/bin/cloudflared'
+
+init()
+{
+	if [ ! -e '/var/log/cloudflared/' ]; then
+		mkdir -p '/var/log/cloudflared/'
+	fi
+
+	if [ ! -e $LOGDIR ]; then
+		mkdir -p $LOGDIR
+	fi
+}
+
+tunnel_is_active()
+{
+	if [ -f $CLOUDFLARED_TUNNEL_PIDFILE ]; then
+		PID=$(cat $CLOUDFLARED_TUNNEL_PIDFILE)
+
+		if [[ $PID == ?(-)+([[:digit:]]) ]] ; then
+
+			if ps -p $PID > /dev/null ; then
+				return 0 # activo
+			fi
+		fi
+
+		rm $CLOUDFLARED_TUNNEL_PIDFILE
+	fi
+
+	return 1
+}
+
+start_tunnel()
+{
+	echo "[+] init cloudflared tunnel for '${SERVICE}'"
+	if [ ! -f $CLOUDFLARED_BIN ]; then
+
+		echo '[+] cloudflared download'
+
+		if ! wget -O $CLOUDFLARED_BIN $CLOUDFLARED_DOWNLOAD > /dev/null 2>&1 ; then
+			rm $CLOUDFLARED_BIN
+			echo "request failed '$CLOUDFLARED_DOWNLOAD'" >&2
+			exit 5
+		fi
+
+		chmod u+x $CLOUDFLARED_BIN
+	else
+		echo '[+] check cloudflared update'
+		$CLOUDFLARED_BIN update > /dev/null 2>&1
+	fi
+
+	# check cloudflared pid file
+	tunnel_is_active
+	if [ $? -ne 1 ]; then
+		echo "[!] error: cloudflared tunnel for '${SERVICE}' already running!"  >&2
+		exit $?
+	fi
+
+	CMD=" $CLOUDFLARED_BIN tunnel --no-autoupdate --log-directory $LOGDIR --pidfile $CLOUDFLARED_TUNNEL_PIDFILE run --token $CLOUDFLARED_TOKEN"
+	$CMD > /dev/null 2>&1 & PID=$!
+
+	sleep 0.5
+	if ps -p $PID > /dev/null ; then
+		echo "[+] started cloudflared tunnel for '$SERVICE'"
+		exit 0
+	fi
+
+	echo "[!] error: check token for cloudflared tunnel '$SERVICE'"
+	exit 1
+}
+
+status_tunnel()
+{
+	tunnel_is_active
+	if [ $? -ne 1 ]; then
+		echo "[+] cloudflared tunnel for '${SERVICE}' already running!"
+	else
+		echo "[+] cloudflared tunnel for '${SERVICE}' is not running!"
+	fi
+
+	exit 0
+}
+
+stop_tunnel()
+{
+
+	if [ -f $CLOUDFLARED_TUNNEL_PIDFILE ]; then
+		echo "[+] Shutting down cloudflared tunnel for ${SERVICE}"
+		PID=$(cat $CLOUDFLARED_TUNNEL_PIDFILE)
+		kill -KILL $PID >/dev/null 2>&1
+		rm $CLOUDFLARED_TUNNEL_PIDFILE
+		sleep 1
+		exit 0
+	fi
+
+	echo "[!] error: cloudflared tunnel for '${SERVICE}' is not running"
+	exit 1
+}
+
+case "$1" in
+
+	"start")
+		init
+		start_tunnel
+	;;
+
+	"status")
+		init
+		status_tunnel
+	;;
+
+	"stop")
+		stop_tunnel
+	;;
+
+	*)
+	echo "Usage: SERVICE=mysite.com CLOUDFLARED_TOKEN=xxx $0 {start|stop|status}"
+	exit 1
+	;;
+esac
+
