@@ -12,8 +12,12 @@ CLOUDFLARED_BIN='/usr/bin/cloudflared'
 
 init()
 {
-	if [ ! -e $LOGDIR ]; then
-		mkdir -p $LOGDIR
+	if [ ! -d $LOGDIR ]; then
+		mkdir -p $LOGDIR || exit 1
+	fi
+
+	if [ ! -d $(dirname $CLOUDFLARED_TUNNEL_PIDFILE) ]; then
+		mkdir -p $(dirname $CLOUDFLARED_TUNNEL_PIDFILE) || exit 1
 	fi
 }
 
