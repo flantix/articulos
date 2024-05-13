@@ -12,10 +12,6 @@ CLOUDFLARED_BIN='/usr/bin/cloudflared'
 
 init()
 {
-	if [ ! -e '/var/log/cloudflared/' ]; then
-		mkdir -p '/var/log/cloudflared/'
-	fi
-
 	if [ ! -e $LOGDIR ]; then
 		mkdir -p $LOGDIR
 	fi
