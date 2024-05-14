@@ -83,7 +83,7 @@ status_tunnel()
 {
 	tunnel_is_active
 	if [ $? -ne 1 ]; then
-		echo "[+] cloudflared tunnel for '${SERVICE}' already running"
+		echo "[+] cloudflared tunnel for '${SERVICE}' is running"
 	else
 		echo "[+] cloudflared tunnel for '${SERVICE}' is stopped"
 	fi
