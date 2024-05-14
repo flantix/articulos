@@ -93,15 +93,16 @@ status_tunnel()
 
 stop_tunnel()
 {
-
-	if [ -f $CLOUDFLARED_TUNNEL_PIDFILE ]; then
-		echo "[+] Shutting down cloudflared tunnel for ${SERVICE}"
-		PID=$(cat $CLOUDFLARED_TUNNEL_PIDFILE)
-		kill -KILL $PID >/dev/null 2>&1
-		rm $CLOUDFLARED_TUNNEL_PIDFILE
-		sleep 1
-		exit 0
-	fi
+        if [ -f $CLOUDFLARED_TUNNEL_PIDFILE ]; then
+                echo "[+] Shutting down cloudflared tunnel for ${SERVICE}"
+                PID=$(cat $CLOUDFLARED_TUNNEL_PIDFILE)
+                if ps -p $PID > /dev/null ; then
+                        kill -s 15 $PID
+			rm $CLOUDFLARED_TUNNEL_PIDFILE
+                	sleep 1
+                	exit 0
+                fi
+        fi
 
 	echo "[!] error: cloudflared tunnel for '${SERVICE}' is not running"
 	exit 1
