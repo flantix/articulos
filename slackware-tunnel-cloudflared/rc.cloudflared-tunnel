@@ -62,7 +62,7 @@ start_tunnel()
 	# check cloudflared pid file
 	tunnel_is_active
 	if [ $? -ne 1 ]; then
-		echo "[!] error: cloudflared tunnel for '${SERVICE}' already running!"  >&2
+		echo "[!] error: cloudflared tunnel for '${SERVICE}' already running"  >&2
 		exit $?
 	fi
 
