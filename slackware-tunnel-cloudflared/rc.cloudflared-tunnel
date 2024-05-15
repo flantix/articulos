@@ -32,8 +32,6 @@ tunnel_is_active()
 				return 0 # activo
 			fi
 		fi
-
-		rm $CLOUDFLARED_TUNNEL_PIDFILE
 	fi
 
 	return 1
