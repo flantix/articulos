@@ -1,0 +1,107 @@
+#!/bin/bash
+
+REPMGRD_BIN='/usr/lib64/postgresql/14/bin/repmgrd'
+REPMGRD_CONFIG=${REPMGRD_CONFIG:-'/var/lib/pgsql/repmgr.conf'}
+REPMGRD_PIDFILE='/var/run/repmgr.pid'
+REPMGR_LOGFILE='/var/log/repmgrd.log'
+
+
+if [ ! -f $REPMGRD_BIN ]; then
+	echo "Could not find 'repmgrd' binary. Maybe repmgr is not installed properly?"
+	exit 5
+fi
+
+start()
+{
+	echo 'Starting repmgrd'
+
+	if [ $(pgrep -f $REPMGRD_BIN) ]; then
+		echo 'repmgrd daemon already running'
+		exit 1
+	fi
+
+	if [ ! -e $REPMGRD_CONFIG ]; then
+		echo "You should config repmgrd in '$REPMGRD_CONFIG'"
+		exit 6
+	fi
+
+	touch $REPMGR_LOGFILE $REPMGRD_PIDFILE
+	chown postgres:wheel $REPMGR_LOGFILE $REPMGRD_PIDFILE
+	chmod 0640 $REPMGR_LOGFILE $REPMGRD_PIDFILE
+
+	CMD="$REPMGRD_BIN -f '$REPMGRD_CONFIG' -p '$REPMGRD_PIDFILE' --verbose >>  $REPMGR_LOGFILE 2>&1"
+	su - postgres -c "$CMD"
+	sleep 0.5
+
+	PID=$(cat $REPMGRD_PIDFILE)
+
+	if [[ $PID == ?(-)+([[:digit:]]) ]] ; then
+		if ps -p $PID > /dev/null ; then
+			echo "Started repmgrd using configuration file '$REPMGRD_CONFIG'"
+			exit 0
+		fi
+	fi
+
+	echo 'error starting repmgrd'
+	rm $REPMGRD_PIDFILE
+	exit 1
+}
+
+stop()
+{
+	if [ $(pgrep -f $REPMGRD_BIN) ]; then
+		echo "Shutting down repmgrd"
+
+		killall -s 15 $REPMGRD_BIN
+		status=$?
+
+		if [ $status -ne 0 ]; then
+			if [ -f $REPMGRD_PIDFILE ]; then
+				rm $REPMGRD_PIDFILE
+			fi
+			exit 0
+		fi
+
+		exit $status
+	fi
+
+	echo "repmgrd daemon is not running"
+	exit 1
+}
+
+status()
+{
+	if [ $(pgrep -f $REPMGRD_PIDFILE) ]; then
+		echo "repmgrd daemon is running"
+
+		if [ ! -f $REPMGRD_PIDFILE ]; then
+			echo "Warning: Missing pid file $PIDFILE"
+		fi
+		exit 0
+	fi
+
+	echo "repmgrd daemon is stopped"
+
+	if [ -f $REPMGRD_PIDFILE ]; then
+		echo "Detected stale pid file $PIDFILE"
+	fi
+}
+
+case "$1" in
+	"start")
+		start
+	;;
+
+	"status")
+		status
+	;;
+
+	"stop")
+		stop
+	;;
+
+	*)
+	echo "Usage: $0 {start|stop|status}"
+	exit 1
+	;;
+esac
