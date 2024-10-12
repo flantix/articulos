@@ -10,7 +10,7 @@ BEGIN
 	IF($1 IS NULL) THEN RETURN; END IF;
 
 	IF (jsonb_typeof($1) NOT IN ('array', 'object')) THEN
-		$1 := '[]'::jsonb;
+		$1 = '[]'::jsonb;
 		RETURN ;
 	END IF;
 
@@ -24,7 +24,7 @@ BEGIN
 			select *
 			from  jsonb_array_elements(%L) as r
 			WHERE NOT ( (jsonb_typeof(r)  <> ''object'') or (r = ''{}''::jsonb) )
-			%s -- dinamic sort by
+			%s -- dynamic sort by
 		)as r(j);
 	', $1  , (case when $2 is true then 'order by 1 desc' else '' end));
 
