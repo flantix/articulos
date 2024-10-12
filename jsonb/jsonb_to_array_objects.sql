@@ -10,7 +10,7 @@ BEGIN
 	IF($1 IS NULL) THEN RETURN; END IF;
 
 	IF (jsonb_typeof($1) NOT IN ('array', 'object')) THEN
-		$1 = '[]'::jsonb;
+		$1 := '[]'::jsonb;
 		RETURN ;
 	END IF;
 
