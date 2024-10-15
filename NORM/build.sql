@@ -11,7 +11,7 @@ set search_path to app;
 DO $$
 DECLARE _sql TEXT;
 BEGIN
-	select format('ALTER DATABASE %s SET SEARCH_PATH TO app, geozona', current_database() ) into  _sql;
+	select format('ALTER DATABASE %s SET SEARCH_PATH TO app, domesa', current_database() ) into  _sql;
 	select format('alter database %s set timezone to ''UTC'' ', current_database()) into _sql;
 	execute _sql;
 END$$;
