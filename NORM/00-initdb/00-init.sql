@@ -39,22 +39,3 @@ BEGIN
 END;
 $$
 LANGUAGE PLPGSQL;
-
-
-
-
-/*
-CREATE OR REPLACE FUNCTION app.negator (INOUT boolean default null) AS
-$$
-BEGIN
-    SELECT COALESCE(NOT($1), false) into $1;
-END;
-$$
-LANGUAGE plpgsql;
-
-CREATE OPERATOR app.! (
-    RIGHTARG = bool,
-    FUNCTION = app.negator,
-    NEGATOR  = !<>
-);
-*/
