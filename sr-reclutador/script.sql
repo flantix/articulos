@@ -1,4 +1,87 @@
 
+create or replace function domesa.sync_tipo_embalaje(text default null) returns setof domesa.tipo_embalaje as
+$$
+DECLARE
+	_rc RECORD;
+	_sql TEXT;
+BEGIN
+	$1 := app.initcap($1);
+
+	if($1 is null or length($1) < 1 ) then
+		return;
+	end if;
+
+	_sql := format('
+		select te as row from domesa.tipo_embalaje as te
+		where app.unaccent(app.lower(te.nombre)) = app.unaccent(app.lower(%L))
+	', $1);
+
+	execute _sql into _rc;
+
+	IF _rc.row IS NULL THEN
+		insert into domesa.tipo_embalaje(nombre) values ($1)
+		returning * into _rc;
+		RETURN NEXT _rc;
+	ELSE
+		return NEXT _rc.row;
+	END IF;
+END;
+$$ language plpgsql;
+
+create or replace function domesa.sync_tipo_servicio(text default null) returns setof domesa.tipo_servicio as
+$$
+DECLARE
+	_rc RECORD;
+	_sql TEXT;
+BEGIN
+	$1 := app.upper($1);
+
+	if($1 is null or length($1) < 1) then
+		return;
+	end if;
+
+	_sql := format('
+		select ts as row from domesa.tipo_servicio as ts
+		where app.unaccent(app.lower(ts.nombre)) = app.unaccent(app.lower(%L))
+	', $1);
+
+	execute _sql into _rc;
+
+	IF _rc.row IS NULL THEN
+		insert into domesa.tipo_servicio(nombre) values ($1)
+		returning * into _rc;
+		RETURN NEXT _rc;
+	ELSE
+		return NEXT _rc.row;
+	END IF;
+END;
+$$ language plpgsql;
+
+create or replace function domesa.sync_status_guia(text default null) returns setof domesa.status_guia as
+$$
+DECLARE
+	_id bigint;
+BEGIN
+	if($1 is null) then
+		return;
+	end if;
+
+	$1 := app.upper($1);
+
+	select id into _id
+	from  domesa.status_guia
+	where app.unaccent(app.upper(nombre)) = app.unaccent($1);
+
+	if not found then
+		insert into domesa.status_guia (nombre) values( app.initcap($1) ) returning id into _id;
+	else
+		update domesa.status_guia set nombre = app.initcap($1) where id = _id;
+	end if;
+
+	return query select * from domesa.status_guia where id = _id;
+END;
+$$ language plpgsql;
+
 
 create or replace function app.safe_cast(text, anyelement) returns anyelement as
 $$
