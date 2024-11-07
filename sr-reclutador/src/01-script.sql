@@ -6,7 +6,7 @@ create or replace function domesa.jsonb_to_vguia(JSONB default null) RETURNS set
 $$
 declare
 	_requiredAttributes TEXT[] := '{
-		,id
+		 id
 		,id_tipo_envio
 		,id_forma_pago
 		,id_operador
