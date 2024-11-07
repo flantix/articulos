@@ -6,6 +6,7 @@ create or replace function domesa.jsonb_to_vguia(JSONB default null) RETURNS set
 $$
 declare
 	_requiredAttributes TEXT[] := '{
+		,id
 		,id_tipo_envio
 		,id_forma_pago
 		,id_operador
@@ -68,7 +69,7 @@ BEGIN
 			,app.safe_cast(item->>'fecha_registro',null::timestamp without time zone)   as fecha_registro
 			from (
 				SELECT el FROM jsonb_array_elements($1) AS el
-				where  el ?& _requiredAttributes
+				where  el ?& _requiredAttributes -- (operator ?&) https://www.postgresql.org/docs/9.5/functions-json.html
 			)r(item)
 	),
 	cte2 as (
