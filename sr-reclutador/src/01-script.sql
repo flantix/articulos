@@ -25,9 +25,6 @@ declare
 		,rastreo
 		,fecha_registro
 	}';
-	_sql TEXT ='';
-	_rc RECORD;
-
 BEGIN
 	-- debug si es nulo el parametro de entrada (estoy en debug) analizo este json si es el mismo tomara el ultimo de los iguales por id
 	-- pero la exclucion se hace al final en el row_number por si falla alguna validacion que no sea la duplicidad
